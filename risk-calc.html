@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Risk Calc" />
+<meta name="theme-color" content="#0f1923" />
+<title>Risk Calc</title>
+<link rel="manifest" href="manifest.json" />
+
+<!-- Inline Apple Touch Icon (teal calculator icon as SVG→base64) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMGYxOTIzIi8+PHJlY3QgeD0iMzAiIHk9IjMwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgcng9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0ZGI4YTAiIHN0cm9rZS13aWR0aD0iNiIvPjxsaW5lIHgxPSI2MCIgeTE9IjY1IiB4Mj0iMTIwIiB5Mj0iNjUiIHN0cm9rZT0iIzRkYjhhMCIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iNjAiIHkxPSI5MCIgeDI9IjEyMCIgeTI9IjkwIiBzdHJva2U9IiM0ZGI4YTAiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjYwIiB5MT0iMTE1IiB4Mj0iMTAwIiB5Mj0iMTE1IiBzdHJva2U9IiM0ZGI4YTAiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+" />
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0f1923;
+    --surface: #162030;
+    --elevated: #1d2d3f;
+    --metric: #1a2a3a;
+    --accent: #4db8a0;
+    --accent-dim: #2a5e52;
+    --accent-glow: rgba(77,184,160,0.13);
+    --text: #d6e8e0;
+    --text-2: #7fa99b;
+    --text-3: #4d7068;
+    --border: rgba(77,184,160,0.15);
+    --border2: rgba(77,184,160,0.28);
+    --warn-bg: rgba(180,145,80,0.13);
+    --warn: #b89150;
+    --err-bg: rgba(180,90,90,0.14);
+    --err: #c27070;
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior: none;
+  }
+
+  body {
+    padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 0);
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 12px 16px 40px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 16px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header .inst-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Instrument Pills */
+  .inst-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .inst-pill {
+    flex: 1;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--elevated);
+    color: var(--text-2);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    -webkit-appearance: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .inst-pill.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  /* Mode Toggle */
+  .mode-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--elevated);
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .mode-btn.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: transparent;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+  }
+
+  /* Fields */
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .field input {
+    width: 100%;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--elevated);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 500;
+    padding: 0 14px;
+    font-family: inherit;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(77,184,160,0.12);
+  }
+
+  .field input::placeholder {
+    color: var(--text-3);
+    font-weight: 400;
+    font-size: 16px;
+  }
+
+  .field input[type=number]::-webkit-inner-spin-button,
+  .field input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Ticks auto-badge */
+  .auto-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-glow);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .auto-badge strong { color: var(--accent); font-weight: 600; }
+
+  .inst-note {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* Optional toggle */
+  .optional-toggle {
+    width: 100%;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 12px;
+    transition: color 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    -webkit-appearance: none;
+    outline: none;
+  }
+
+  .optional-toggle:hover { color: var(--text-2); border-color: var(--border2); }
+  .optional-toggle.open { color: var(--accent); border-color: var(--border2); }
+
+  /* Results */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .metric {
+    background: var(--metric);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    border: 0.5px solid var(--border);
+  }
+
+  .metric.big {
+    grid-column: span 2;
+    background: var(--accent-glow);
+    border-color: var(--accent-dim);
+  }
+
+  .m-label {
+    font-size: 10px;
+    color: var(--text-3);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .metric.big .m-label { color: var(--accent); opacity: 0.8; }
+
+  .m-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  .metric.big .m-value { color: var(--accent); font-size: 32px; }
+
+  .m-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  .metric.big .m-sub { color: var(--accent); opacity: 0.6; }
+
+  .error-box {
+    background: var(--err-bg);
+    border: 0.5px solid rgba(180,90,90,0.22);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--err);
+    line-height: 1.55;
+  }
+
+  /* Warning */
+  .warn-box {
+    display: flex;
+    gap: 8px;
+    background: var(--warn-bg);
+    border: 0.5px solid rgba(180,145,80,0.2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--warn);
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+
+  .warn-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+  /* Divider */
+  .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
+
+  /* Chevron */
+  .chevron { display: inline-block; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>Risk Calc</h1>
+    <span class="inst-badge" id="header-inst">MES</span>
+  </div>
+
+  <!-- Instrument Select -->
+  <div class="inst-row">
+    <button class="inst-pill active" onclick="setInst('MES')">MES</button>
+    <button class="inst-pill" onclick="setInst('MNQ')">MNQ</button>
+    <button class="inst-pill" onclick="setInst('MGC')">MGC</button>
+  </div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-row">
+    <button class="mode-btn active" id="btn-fwd" onclick="setMode('forward')">Risk → Contracts</button>
+    <button class="mode-btn" id="btn-rev" onclick="setMode('reverse')">Contracts → Risk</button>
+  </div>
+
+  <!-- Main Inputs -->
+  <div class="card">
+    <div class="field">
+      <label>Stop size (ticks)</label>
+      <input type="number" id="ticks" inputmode="decimal" placeholder="e.g. 4" oninput="calc()" />
+    </div>
+
+    <div id="fwd-fields">
+      <div class="field">
+        <label>Max dollar risk ($)</label>
+        <input type="number" id="maxRisk" inputmode="decimal" placeholder="e.g. 50" oninput="calc()" />
+      </div>
+    </div>
+
+    <div id="rev-fields" style="display:none">
+      <div class="field">
+        <label>Number of contracts</label>
+        <input type="number" id="ctIn" inputmode="numeric" placeholder="e.g. 2" oninput="calc()" />
+      </div>
+    </div>
+
+    <p class="inst-note" id="inst-note">MES — tick size 0.25 · tick value $1.25</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results-wrap" style="display:none">
+    <div class="card">
+      <div id="results-content"></div>
+    </div>
+  </div>
+
+  <!-- Optional Price Fields Toggle -->
+  <button class="optional-toggle" id="price-toggle" onclick="togglePrices()">
+    <span class="chevron" id="chevron">▾</span>
+    Entry &amp; Stop Price (optional)
+  </button>
+
+  <div id="price-section" style="display:none">
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label>Entry price</label>
+          <input type="number" id="entryPrice" inputmode="decimal" placeholder="5250.00" oninput="calcFromPrice()" />
+        </div>
+        <div class="field">
+          <label>Stop price</label>
+          <input type="number" id="stopPrice" inputmode="decimal" placeholder="5249.00" oninput="calcFromPrice()" />
+        </div>
+      </div>
+      <div id="auto-badge" style="display:none" class="auto-badge">
+        <span>↑ Auto-filled: <strong id="auto-ticks">—</strong> ticks</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning -->
+  <div class="warn-box">
+    <span class="warn-icon">⚠</span>
+    <span>Risk calc only. Does not include commissions, slippage, margin, or fees.</span>
+  </div>
+
+</div>
+
+<script>
+const CFG = {
+  MES: { tickSize: 0.25, tickValue: 1.25, note: 'MES — tick size 0.25 · tick value $1.25' },
+  MNQ: { tickSize: 0.25, tickValue: 0.50, note: 'MNQ — tick size 0.25 · tick value $0.50' },
+  MGC: { tickSize: 0.10, tickValue: 1.00, note: 'MGC — tick size 0.10 · tick value $1.00' }
+};
+
+let inst = 'MES';
+let mode = 'forward';
+let priceOpen = false;
+
+function setInst(i) {
+  inst = i;
+  document.getElementById('header-inst').textContent = i;
+  document.getElementById('inst-note').textContent = CFG[i].note;
+  document.querySelectorAll('.inst-pill').forEach((el, idx) => {
+    el.classList.toggle('active', ['MES','MNQ','MGC'][idx] === i);
+  });
+  calcFromPrice();
+  calc();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-fwd').classList.toggle('active', m === 'forward');
+  document.getElementById('btn-rev').classList.toggle('active', m === 'reverse');
+  document.getElementById('fwd-fields').style.display = m === 'forward' ? '' : 'none';
+  document.getElementById('rev-fields').style.display = m === 'reverse' ? '' : 'none';
+  calc();
+}
+
+function togglePrices() {
+  priceOpen = !priceOpen;
+  document.getElementById('price-section').style.display = priceOpen ? '' : 'none';
+  const tog = document.getElementById('price-toggle');
+  tog.classList.toggle('open', priceOpen);
+  document.getElementById('chevron').classList.toggle('open', priceOpen);
+}
+
+function calcFromPrice() {
+  const cfg = CFG[inst];
+  const entry = parseFloat(document.getElementById('entryPrice').value);
+  const stop  = parseFloat(document.getElementById('stopPrice').value);
+  const badge = document.getElementById('auto-badge');
+  if (!isNaN(entry) && !isNaN(stop) && entry !== stop) {
+    const t = Math.round(Math.abs(entry - stop) / cfg.tickSize);
+    document.getElementById('auto-ticks').textContent = t;
+    badge.style.display = 'flex';
+    document.getElementById('ticks').value = t;
+    calc();
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function fmt(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calc() {
+  const cfg = CFG[inst];
+  const ticksRaw = parseFloat(document.getElementById('ticks').value);
+  const wrap = document.getElementById('results-wrap');
+  const content = document.getElementById('results-content');
+
+  if (isNaN(ticksRaw) || ticksRaw <= 0) { wrap.style.display = 'none'; return; }
+  const ticks = Math.max(1, Math.round(ticksRaw));
+  const rpc = ticks * cfg.tickValue;
+
+  if (mode === 'forward') {
+    const mr = parseFloat(document.getElementById('maxRisk').value);
+    if (isNaN(mr) || mr <= 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+
+    if (mr < rpc) {
+      content.innerHTML = `
+        <div class="results-grid">
+          <div class="metric">
+            <div class="m-label">Risk / contract</div>
+            <div class="m-value">${fmt(rpc)}</div>
+            <div class="m-sub">${ticks} tick${ticks!==1?'s':''} × ${fmt(cfg.tickValue)}</div>
+          </div>
+        </div>
+        <div class="error-box" style="margin-top:10px">
+          ${fmt(mr)} is too small for 1 contract.<br>Need at least <strong>${fmt(rpc)}</strong> with this stop.
+        </div>`;
+      return;
+    }
+
+    const contracts  = Math.floor(mr / rpc);
+    const actualRisk = contracts * rpc;
+    const leftover   = mr - actualRisk;
+
+    content.innerHTML = `
+      <div class="results-grid">
+        <div class="metric big">
+          <div class="m-label">Max contracts</div>
+          <div class="m-value">${contracts}</div>
+          <div class="m-sub">within ${fmt(mr)} budget</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Risk / contract</div>
+          <div class="m-value">${fmt(rpc)}</div>
+          <div class="m-sub">${ticks} tick${ticks!==1?'s':''}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Actual risk</div>
+          <div class="m-value">${fmt(actualRisk)}</div>
+          <div class="m-sub">${contracts} × ${fmt(rpc)}</div>
+        </div>
+        <div class="metric" style="grid-column: span 2">
+          <div class="m-label">Leftover unused</div>
+          <div class="m-value" style="font-size:20px">${fmt(leftover)}</div>
+          <div class="m-sub">${leftover === 0 ? 'perfect fit' : 'not enough for +1 contract'}</div>
+        </div>
+      </div>`;
+
+  } else {
+    const ct = parseInt(document.getElementById('ctIn').value);
+    if (isNaN(ct) || ct <= 0) { wrap.style.display = 'none'; return; }
+    const total = ct * rpc;
+    wrap.style.display = '';
+    content.innerHTML = `
+      <div class="results-grid">
+        <div class="metric big">
+          <div class="m-label">Total dollar risk</div>
+          <div class="m-value">${fmt(total)}</div>
+          <div class="m-sub">${ct} contract${ct!==1?'s':''} × ${fmt(rpc)}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Risk / contract</div>
+          <div class="m-value">${fmt(rpc)}</div>
+          <div class="m-sub">${ticks} tick${ticks!==1?'s':''}</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Contracts</div>
+          <div class="m-value">${ct}</div>
+          <div class="m-sub">${inst}</div>
+        </div>
+      </div>`;
+  }
+}
+</script>
+</body>
+</html>
